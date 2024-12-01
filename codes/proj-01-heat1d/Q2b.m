@@ -5,6 +5,19 @@ f = @(x) -20*x.^3; % f(x) is the source
 g = 1.0;           % u    = g  at x = 1
 h = 0.0;           % -u,x = h  at x = 0
 
+%exact solution
+exact = @(x)x.^5;%exact solution
+exact_square = @(x)x.^10;%exact u square
+exact_du = @(x)5*x.^4;
+exact_square_du = @(x)25*x.^8;
+L2_down = sqrt(integral(exact_square,0,1));%L2分母
+H1_down = sqrt(integral(exact_square_du,0,1));%H1分母
+
+%存储结果
+resultL2 = zeros(8,1);
+resultH1 = zeros(8,1);
+resulth = zeros(8,1);
+
 % Setup the mesh
 pp   = 2;              % polynomial degree
 n_en = pp + 1;         % number of element or local nodes
@@ -87,6 +100,7 @@ for n_el = 2:2:16;     % mesh with element number from 2 to 16
     x_sam = zeros(n_el * n_sam + 1, 1);
     y_sam = x_sam; % store the exact solution value at sampling points
     u_sam = x_sam; % store the numerical solution value at sampling pts
+    eL2_sam = x_sam;%store L2 difference value
     for ee = 1 : n_el
         x_ele = x_coor( IEN(ee, :) );
         u_ele = disp( IEN(ee, :) );
@@ -107,6 +121,7 @@ for n_el = 2:2:16;     % mesh with element number from 2 to 16
             y_sam( (ee-1)*n_sam + ll ) = x_l^5;
         end
     end
+    
     plot(x_sam, u_sam, '-r','LineWidth',3);
     hold on;
     plot(x_sam, y_sam, '-k','LineWidth',3);
