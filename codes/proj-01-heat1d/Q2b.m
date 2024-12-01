@@ -5,6 +5,11 @@ f = @(x) -20*x.^3; % f(x) is the source
 g = 1.0;           % u    = g  at x = 1
 h = 0.0;           % -u,x = h  at x = 0
 
+%存储结果
+resultL2 = zeros(8,1);
+resultH1 = zeros(8,1);
+resulth = zeros(8,1);
+
 %exact solution
 exact = @(x)x.^5;%exact solution
 exact_square = @(x)x.^10;%exact u square
@@ -13,13 +18,9 @@ exact_square_du = @(x)25*x.^8;
 L2_down = sqrt(integral(exact_square,0,1));%L2分母
 H1_down = sqrt(integral(exact_square_du,0,1));%H1分母
 
-%存储结果
-resultL2 = zeros(8,1);
-resultH1 = zeros(8,1);
-resulth = zeros(8,1);
 
 % Setup the mesh
-pp   = 2;              % polynomial degree
+pp   = 1;              % polynomial degree
 n_en = pp + 1;         % number of element or local nodes
 for n_el = 2:2:16;     % mesh with element number from 2 to 16
     hh=1/n_el/n_en;
@@ -39,7 +40,7 @@ for n_el = 2:2:16;     % mesh with element number from 2 to 16
     ID(end) = 0;
 
     % Setup the quadrature rule
-    n_int =10;
+    n_int =20;
     [xi, weight] = Gauss(n_int, -1, 1);
 
     % allocate the stiffness matrix
@@ -119,10 +120,35 @@ for n_el = 2:2:16;     % mesh with element number from 2 to 16
             x_sam( (ee-1)*n_sam + ll ) = x_l;
             u_sam( (ee-1)*n_sam + ll ) = u_l;
             y_sam( (ee-1)*n_sam + ll ) = x_l^5;
+            eL2_sam((ee-1)*n_sam+ ll) = u_l-x_l^5;
         end
     end
-    
-    plot(x_sam, u_sam, '-r','LineWidth',3);
-    hold on;
-    plot(x_sam, y_sam, '-k','LineWidth',3);
+
+    %计算eL2分子
+    nL2=0;
+    nH1=0;
+    for ee = 1: n_el*n_sam
+        nL2=nL2+(x_sam(ee+1)-x_sam(ee))*eL2_sam(ee)^2;
+        nH1=nH1+(x_sam(ee+1)-x_sam(ee))*((u_sam(ee+1)-u_sam(ee))/(x_sam(ee+1)-x_sam(ee))-exact_du(x_sam(ee)))^2
+    end
+
+    %保存
+    nL2=sqrt(nL2);
+    nH1=sqrt(nH1);
+    resultH1(n_el/2)=log(nH1/H1_down);
+    resultL2(n_el/2)=log(nL2/L2_down);
+    resulth(n_el/2)=log(hh);
 end
+
+%plot error L2 and H1
+plot(resulth,resultL2,'-r','LineWidth',3);
+xlabel('log(h)');
+ylabel('log(Error L2)')
+title('Error L2 vs mesh size');
+hold on;
+
+figure
+plot(resulth,resultH1,'-r','LineWidth',3);
+xlabel('log(h)');
+ylabel('log(Error H1)');
+title('Error H1 vs. Mesh Size');
