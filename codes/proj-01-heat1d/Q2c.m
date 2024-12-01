@@ -20,7 +20,7 @@ H1_down = sqrt(integral(exact_square_du,0,1));%H1分母
 
 
 % Setup the mesh
-pp   = 2;              % polynomial degree
+pp   = 3;              % polynomial degree
 n_en = pp + 1;         % number of element or local nodes
 for n_el = 2:2:16;     % mesh with element number from 2 to 16
     hh=1/n_el/n_en;
