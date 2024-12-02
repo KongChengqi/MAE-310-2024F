@@ -119,24 +119,21 @@ for n_el = 2:2:16;     % mesh with element number from 2 to 16
             end
             x_sam( (ee-1)*n_sam + ll ) = x_l;
             u_sam( (ee-1)*n_sam + ll ) = u_l;
-            y_sam( (ee-1)*n_sam + ll ) = x_l^5;
-            eL2_sam((ee-1)*n_sam+ ll) = u_l-x_l^5;
+            y_sam( (ee-1)*n_sam + ll ) = x_l^5;     
         end
     end
 
-    %计算eL2分子
+    %计算eL2和eH1分子
     nL2=0;
     nH1=0;
     for ee = 1: n_el*n_sam
-        nL2=nL2+(x_sam(ee+1)-x_sam(ee))*eL2_sam(ee)^2;
-        nH1=nH1+(x_sam(ee+1)-x_sam(ee))*((u_sam(ee+1)-u_sam(ee))/(x_sam(ee+1)-x_sam(ee))-exact_du(x_sam(ee)))^2
+        nL2=nL2+(x_sam(ee+1)-x_sam(ee))*(u_sam(ee)-y_sam(ee))^2;
+        nH1=nH1+(x_sam(ee+1)-x_sam(ee))*((u_sam(ee+1)-u_sam(ee))/(x_sam(ee+1)-x_sam(ee))-exact_du(x_sam(ee)))^2;
     end
 
     %保存
-    nL2=sqrt(nL2);
-    nH1=sqrt(nH1);
-    resultH1(n_el/2)=log(nH1/H1_down);
-    resultL2(n_el/2)=log(nL2/L2_down);
+    resultH1(n_el/2)=log(nH1^0.5)/log(H1_down);
+    resultL2(n_el/2)=log(nL2^0.5)/log(L2_down);
     resulth(n_el/2)=log(hh);
 end
 
@@ -152,3 +149,6 @@ plot(resulth,resultH1,'-r','LineWidth',3);
 xlabel('log(h)');
 ylabel('log(Error H1)');
 title('Error H1 vs. Mesh Size');
+
+slope_e_L2 = (resultL2(8)-resultL2(1))/(resulth(8)-resulth(1));
+slope_e_H1 = (resultH1(8)-resultH1(1))/(resulth(8)-resulth(1));
