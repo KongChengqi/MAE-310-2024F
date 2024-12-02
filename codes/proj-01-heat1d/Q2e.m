@@ -11,7 +11,7 @@ n_en = pp + 1;         % number of element or local nodes
 n_el = 2;              % number of elements
 n_np = n_el * pp + 1;  % number of nodal points
 n_eq = n_np - 1;       % number of equations
-test = cell(6,1);
+test = zeros(7,6);
 
 
 hh = 1.0 / (n_np - 1); % space between two adjacent nodes
@@ -82,9 +82,8 @@ F(ID(IEN(1,1))) = F(ID(IEN(1,1))) + h;
 
 % Solve Kd = F equation
 d_temp = K \ F;
-
 disp = [d_temp; g];
-test(n_int)=disp;
+test(:,n_int)=disp;
 end
 
 
