@@ -20,7 +20,7 @@ exact_square_du = @(x)25*x.^8;
 
 
 % Setup the mesh
-pp   = 2;              % polynomial degree1
+pp   = 3;              % polynomial degree1
 n_en = pp + 1;         % number of element or local nodes
 for n_el = 2:2:16     % mesh with element number from 2 to 16
     n_np = n_el * pp + 1;  % number of nodal points
