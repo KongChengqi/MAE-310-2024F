@@ -6,27 +6,28 @@ g = 1.0;           % u    = g  at x = 1
 h = 0.0;           % -u,x = h  at x = 0
 
 %存储结果
-resultL2 = zeros(8,1);
-resultH1 = zeros(8,1);
-resulth = zeros(8,1);
+resultL2 = zeros(1,8);
+resultH1 = zeros(1,8);
+resulth = zeros(1,8);
+L2_error=zeros(1,8);
+H1_error=zeros(1,8);
 
 %exact solution
 exact = @(x)x.^5;%exact solution
 exact_square = @(x)x.^10;%exact u square
 exact_du = @(x)5*x.^4;
 exact_square_du = @(x)25*x.^8;
-L2_down = sqrt(integral(exact_square,0,1));%L2分母
-H1_down = sqrt(integral(exact_square_du,0,1));%H1分母
 
 
 % Setup the mesh
-pp   = 3;              % polynomial degree
+pp   = 2;              % polynomial degree1
 n_en = pp + 1;         % number of element or local nodes
 for n_el = 2:2:16     % mesh with element number from 2 to 16
-    hh=1/n_el/n_en;
-    x_coor=0:hh:1;         % nodal coordinates for equally spaced nodes
     n_np = n_el * pp + 1;  % number of nodal points
     n_eq = n_np - 1;       % number of equations
+
+    hh = 1.0 / (n_np - 1); % space between two adjacent nodes
+    x_coor = 0 : hh : 1;    % number of equations
     
     %set IEN
     IEN = zeros(n_el, n_en);
@@ -40,11 +41,11 @@ for n_el = 2:2:16     % mesh with element number from 2 to 16
     ID(end) = 0;
 
     % Setup the quadrature rule
-    n_int =20;
+    n_int = 10;
     [xi, weight] = Gauss(n_int, -1, 1);
 
     % allocate the stiffness matrix
-    K = zeros(n_eq, n_eq);
+    K = spalloc(n_eq, n_eq, (2*pp+1)*n_eq);
     F = zeros(n_eq, 1);
 
     % Assembly of the stiffness matrix and load vector
@@ -101,7 +102,7 @@ for n_el = 2:2:16     % mesh with element number from 2 to 16
     x_sam = zeros(n_el * n_sam + 1, 1);
     y_sam = x_sam; % store the exact solution value at sampling points
     u_sam = x_sam; % store the numerical solution value at sampling pts
-    eL2_sam = x_sam;%store L2 difference value
+    
     for ee = 1 : n_el
         x_ele = x_coor( IEN(ee, :) );
         u_ele = disp( IEN(ee, :) );
@@ -123,18 +124,44 @@ for n_el = 2:2:16     % mesh with element number from 2 to 16
         end
     end
 
-    %计算eL2和eH1分子
+    %计算eL2和eH1
+    nqp=10;
+    [xi,weight]=Gauss(nqp,-1,1);
     nL2=0;
     nH1=0;
-    for ee = 1: n_el*n_sam
-        nL2=nL2+(x_sam(ee+1)-x_sam(ee))*(u_sam(ee)-y_sam(ee))^2;
-        nH1=nH1+(x_sam(ee+1)-x_sam(ee))*((u_sam(ee+1)-u_sam(ee))/(x_sam(ee+1)-x_sam(ee))-exact_du(x_sam(ee)))^2;
+    L2_down=0;
+    H1_down=0;
+    for ee = 1: n_el
+        x_ele=x_coor(IEN(ee,:));
+        u_ele=disp(IEN(ee,:));
+
+        for ll = 1 : nqp
+    x_l = 0.0; uh = 0.0; dx_dxi = 0.0; uh_xi = 0.0;
+    for aa = 1 : n_en
+      x_l    = x_l    + x_ele(aa) * PolyShape(pp, aa, xi(ll), 0);
+      uh     = uh     + u_ele(aa) * PolyShape(pp, aa, xi(ll), 0);
+      dx_dxi = dx_dxi + x_ele(aa) * PolyShape(pp, aa, xi(ll), 1);
+      uh_xi  = uh_xi  + u_ele(aa) * PolyShape(pp, aa, xi(ll), 1);
+    end
+    dxi_dx = 1.0 / dx_dxi;
+    nL2 = nL2 + weight(ll) * (uh - exact(x_l))^2 * dx_dxi;
+    L2_down = L2_down + weight(ll) * exact(x_l)^2 * dx_dxi;
+    nH1 = nH1 + weight(ll) * ( uh_xi * dxi_dx - exact_du(x_l) )^2 * dx_dxi;
+    H1_down = H1_down + weight(ll) * exact_du(x_l)^2 * dx_dxi;
+
+        end
     end
 
     %保存
-    resultH1(n_el/2)=log(nH1^0.5)/log(H1_down);
-    resultL2(n_el/2)=log(nL2^0.5)/log(L2_down);
-    resulth(n_el/2)=log(hh);
+    nH1=nH1^0.5;
+    nL2=nL2^0.5;
+    H1_down=H1_down^0.5;
+    L2_down=L2_down^0.5;
+    H1_error(:,n_el/2) = nH1/H1_down;
+    L2_error(:,n_el/2) = nL2/L2_down;
+    resultH1(:,n_el/2)=log(H1_error(:,n_el/2));
+    resultL2(:,n_el/2)=log(L2_error(:,n_el/2));
+    resulth(:,n_el/2)=log(hh);
 end
 
 %plot error L2 and H1
@@ -152,3 +179,21 @@ title('Error H1 vs. Mesh Size');
 
 slope_e_L2 = (resultL2(8)-resultL2(1))/(resulth(8)-resulth(1));
 slope_e_H1 = (resultH1(8)-resultH1(1))/(resulth(8)-resulth(1));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% EOF
