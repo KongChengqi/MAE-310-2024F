@@ -30,7 +30,7 @@ ID = 1 : n_np;
 ID(end) = 0;
 
 % allocate the stiffness matrix
-K = spalloc(n_eq, n_eq, (2*pp+1)*n_eq);
+K = zeros(n_eq,n_eq);
 F = zeros(n_eq, 1);
 
 % Assembly of the stiffness matrix and load vector
