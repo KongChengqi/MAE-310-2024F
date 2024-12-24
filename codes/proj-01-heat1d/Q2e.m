@@ -29,13 +29,12 @@ end
 ID = 1 : n_np;
 ID(end) = 0;
 
-% allocate the stiffness matrix
-K = zeros(n_eq,n_eq);
-F = zeros(n_eq, 1);
-
 % Assembly of the stiffness matrix and load vector
 for n_int=1:1:6
     [xi, weight] = Gauss(n_int, -1, 1);
+    % allocate the stiffness matrix
+K = zeros(n_eq,n_eq);
+F = zeros(n_eq, 1);
 for ee = 1 : n_el
   k_ele = zeros(n_en, n_en); % allocate a zero element stiffness matrix
   f_ele = zeros(n_en, 1);    % allocate a zero element load vector
