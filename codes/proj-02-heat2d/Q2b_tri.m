@@ -13,11 +13,19 @@ f = @(x,y) 2.0*kappa*x*(1-x) + 2.0*kappa*y*(1-y); % source term
 n_int = 3;
 [xi,eta,weight]=Gauss2D(n_int,n_int);
 
+%存储结果
+resultL2 = zeros(1,8);
+resultH1 = zeros(1,8);
+resulth = zeros(1,8);
+L2_error=zeros(1,8);
+H1_error=zeros(1,8);
+
+for hh = 20:20:160
 % mesh generation
 n_en   = 4;               % number of nodes in an element
 n_en_tri = 3;%三角形节点数
-n_el_x = 60;               % number of elements in x-dir
-n_el_y = 60;               % number of elements in y-dir
+n_el_x = hh;               % number of elements in x-dir
+n_el_y = hh;               % number of elements in y-dir
 n_el   = n_el_x * n_el_y; % total number of elements
 
 n_np_x = n_el_x + 1;      % number of nodal points in x-dir
@@ -197,20 +205,34 @@ for ee = 1 : 2*n_el
         H1_down = H1_down + weight(ll) * detJ * ( exact_x(x_l, y_l)^2 + exact_y(x_l, y_l)^2 );
     end
 end
+    nH1=nH1^0.5;
+    nL2=nL2^0.5;
+    H1_down=H1_down^0.5;
+    L2_down=L2_down^0.5;
+    H1_error(:,n_el/2) = nH1/H1_down;
+    L2_error(:,n_el/2) = nL2/L2_down;
+    resultH1(:,n_el/2)=log(H1_error(:,n_el/2));
+    resultL2(:,n_el/2)=log(L2_error(:,n_el/2));
+    resulth(:,n_el/2)=log(hx);
 
-nL2 = sqrt(nL2); L2_down = sqrt(L2_down);
-nH1 = sqrt(nH1); H1_down = sqrt(H1_down);
+end
 
-L2_error = nL2 / L2_down;
-H1_error = nH1 / H1_down;
 
-log_L2 = log(L2_error);
-log_H1 = log(H1_error);
-log_h  = log(hx*hy);
+%plot error L2 and H1
+plot(resulth,resultL2,'-r','LineWidth',3);
+xlabel('log(h)');
+ylabel('log(Error L2)')
+title('Error L2 vs mesh size');
+hold on;
 
-plot(log_h,log_L2,'b','LineWidth',2);
-hold on
-plot(log_h,log_H1,'r','LineWidth',2);
+figure
+plot(resulth,resultH1,'-r','LineWidth',3);
+xlabel('log(h)');
+ylabel('log(Error H1)');
+title('Error H1 vs. Mesh Size');
+
+slope_e_L2 = (resultL2(8)-resultL2(1))/(resulth(8)-resulth(1));
+slope_e_H1 = (resultH1(8)-resultH1(1))/(resulth(8)-resulth(1));
 
 
 % EOF
