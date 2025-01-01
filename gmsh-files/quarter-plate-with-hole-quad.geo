@@ -1,38 +1,40 @@
-R = 0.3;
-L = 1.0;
+R = 0.3;%孔的半径
+L = 1.0;%定义长度（为矩形的半边长）
 
-Point(1) = {L, -L, 0};
-Point(2) = {L, L, 0};
-Point(3) = {-L, L, 0};
-Point(4) = {-L, -L, 0};
-Point(5) = {-L + R, -L, 0};
-Point(6) = {-L, -L + R, 0};
-Point(7) = {-L + Cos(Pi/4) * R, -L + Sin(Pi/4) * R, 0};
+Point(1) = {L, -L, 0};%定义矩形顶点1
+Point(2) = {L, L, 0};%定义矩形顶点2
+Point(3) = {-L, L, 0};%定义矩形顶点3
+Point(4) = {-L, -L, 0};%定义矩形顶点4
+Point(5) = {-L + R, -L, 0};%圆弧点
+Point(6) = {-L, -L + R, 0};%圆弧点
+Point(7) = {-L + Cos(Pi/4) * R, -L + Sin(Pi/4) * R, 0};%圆弧中间点
 
-Circle(1) = {5, 4, 7};
-Circle(2) = {7, 4, 6};
+Circle(1) = {5, 4, 7};%定义点5到点7的圆弧，圆心为点4
+Circle(2) = {7, 4, 6};%定义点7到点6的圆弧，圆心为4
 
-Line(3) = {6, 3};
-Line(4) = {3, 2};
-Line(5) = {2, 1};
-Line(6) = {1, 5};
-Line(7) = {2, 7};
+Line(3) = {6, 3};%从点6到点3的直线
+Line(4) = {3, 2};%从点3到点2的直线
+Line(5) = {2, 1};%从点2到点1的直线
+Line(6) = {1, 5};%从点1到点5的直线
+Line(7) = {2, 7};%从点2到点7的直线
 
-Curve Loop(1) = {4, 7, 2, 3};
-Plane Surface(1) = {1};
+Curve Loop(1) = {4, 7, 2, 3};%定义一个曲线环，由直线和圆弧构成
+Plane Surface(1) = {1};%定义一个面
 
-Curve Loop(2) = {7, -1, -6, -5};
-Plane Surface(2) = {2};
+Curve Loop(2) = {7, -1, -6, -5};%定义另一个曲线环，由直线和圆弧构成
+Plane Surface(2) = {2};%定义另一个面（孔的内部区域）
 
-Transfinite Line{1, 2, 3, 4, 5, 6, 7} = 3;
+Transfinite Line{1, 2, 3, 4, 5, 6, 7} = 3;%将指定的直线网格大小设置为3
 
-Transfinite Surface{1};
-Transfinite Surface{2};
+Transfinite Surface{1};%使曲面1的网格自动生成
+Transfinite Surface{2};%使曲面2的网格自动生成
 
-Recombine Surface{1};
-Recombine Surface{2};
+Recombine Surface{1};%将曲面1的三角形网格重组为四边形网格
+Recombine Surface{2};%将曲面2的三角形网格重组为四边形网格
 
-Mesh.ElementOrder = 1;
-Mesh.Algorithm = 8;
+Mesh.ElementOrder = 1;%网格单元阶数为1
+Mesh.Algorithm = 8;%设置网格生成算法为算法8
+
+%这段代码定义了一个有孔二维矩形的几何结构，并且生成网格，并将初始的三角形网格转化成四边形网格
 
 // EOF
