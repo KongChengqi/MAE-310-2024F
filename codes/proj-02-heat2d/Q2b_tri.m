@@ -209,11 +209,11 @@ end
     nL2=nL2^0.5;
     H1_down=H1_down^0.5;
     L2_down=L2_down^0.5;
-    H1_error(:,n_el/2) = nH1/H1_down;
-    L2_error(:,n_el/2) = nL2/L2_down;
-    resultH1(:,n_el/2)=log(H1_error(:,n_el/2));
-    resultL2(:,n_el/2)=log(L2_error(:,n_el/2));
-    resulth(:,n_el/2)=log(hx);
+    H1_error(:,hh/20) = nH1/H1_down;
+    L2_error(:,hh/20) = nL2/L2_down;
+    resultH1(:,hh/20)=log(H1_error(:,hh/20));
+    resultL2(:,hh/20)=log(L2_error(:,hh/20));
+    resulth(:,hh/20)=log(hx);
 
 end
 
