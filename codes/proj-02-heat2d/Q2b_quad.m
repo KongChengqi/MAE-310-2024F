@@ -26,8 +26,8 @@ for hh = 20:20:160
 
 % mesh generation
 n_en   = 4;               % number of nodes in an element
-n_el_x = 60;               % number of elements in x-dir
-n_el_y = 60;               % number of elements in y-dir
+n_el_x = hh;               % number of elements in x-dir
+n_el_y = hh;               % number of elements in y-dir
 n_el   = n_el_x * n_el_y; % total number of elements
 
 n_np_x = n_el_x + 1;      % number of nodal points in x-dir
@@ -159,14 +159,12 @@ end
 
 % save the solution vector and number of elements to disp with name
 % HEAT.mat
-save("HEAT", "disp", "n_el_x", "n_el_y");
+save("HEAT2", "disp", "n_el_x", "n_el_y");
 
 %计算error
     nL2=0;
     nH1=0;
-    L2_down=0;
-    H1_down=0;
-
+   
 for ee = 1 : n_el
     x_ele = x_coor(IEN(ee, :));
     y_ele = y_coor(IEN(ee, :));
@@ -176,7 +174,7 @@ for ee = 1 : n_el
     x_l = 0.0; y_l = 0.0;
     dx_dxi = 0.0; dx_deta = 0.0;
     dy_dxi = 0.0; dy_deta = 0.0;
-    uh = 0.0; uh_xi=0.0;uh_eta=0.0;
+    uh = 0.0; uh_xl=0.0;uh_yl=0.0;
     for aa = 1 : n_en
       x_l = x_l + x_ele(aa) * Quad(aa, xi(ll), eta(ll));
       y_l = y_l + y_ele(aa) * Quad(aa, xi(ll), eta(ll));    
@@ -186,30 +184,27 @@ for ee = 1 : n_el
       dy_dxi  = dy_dxi  + y_ele(aa) * Na_xi;
       dy_deta = dy_deta + y_ele(aa) * Na_eta;
       uh = uh + u_ele(aa) * Quad(aa, xi(ll), eta(ll));
-      uh_xi = uh_xi+u_ele(aa)*Na_xi;
-      uh_eta=uh_eta+u_ele(aa)*Na_eta;
     end
     detJ = dx_dxi * dy_deta - dx_deta * dy_dxi;
-    uh_xl = (uh_xi * dy_deta - uh_eta * dy_dxi) / detJ;
-    uh_yl = (-uh_xi * dx_deta + uh_eta * dx_dxi) / detJ;
+    for aa = 1 : n_en
+            [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
+            uh_xl = uh_xl + u_ele(aa) * (Na_xi * dy_deta - Na_eta * dy_dxi) /detJ;
+            uh_yl = uh_yl + u_ele(aa) * (Na_eta * dx_dxi - Na_xi * dx_deta) /detJ;
+    end
 
         nL2 = nL2 + weight(ll) * detJ * (uh - exact(x_l, y_l))^2;
-        L2_down = L2_down + weight(ll) * detJ * exact(x_l, y_l)^2;
-
         
         nH1 = nH1 + weight(ll) * detJ * ( ( uh_xl - exact_x(x_l, y_l) )^2 + ( uh_yl - exact_y(x_l, y_l) )^2 );
-        H1_down = H1_down + weight(ll) * detJ * ( exact_x(x_l, y_l)^2 + exact_y(x_l, y_l)^2 );
+        
     end
 end
     nH1=nH1^0.5;
     nL2=nL2^0.5;
-    H1_down=H1_down^0.5;
-    L2_down=L2_down^0.5;
-    H1_error(:,hh/20) = nH1/H1_down;
-    L2_error(:,hh/20) = nL2/L2_down;
+    H1_error(:,hh/20) = nH1;
+    L2_error(:,hh/20) = nL2;
     resultH1(:,hh/20)=log(H1_error(:,hh/20));
     resultL2(:,hh/20)=log(L2_error(:,hh/20));
-    resulth(:,hh/20)=log(hx);
+    resulth(:,hh/20)=log(1/hh);
 
 end
 
