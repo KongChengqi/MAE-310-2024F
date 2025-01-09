@@ -11,7 +11,7 @@ f = @(x,y) 2.0*kappa*x*(1-x) + 2.0*kappa*y*(1-y); % source term
 
 % quadrature rule
 n_int = 3;
-[xi,eta,weight]=Gauss2D(n_int,n_int);
+[xi,eta,weight]=Gauss2D_tri(n_int);
 
 % mesh generation
 n_en   = 4;               % number of nodes in an element
