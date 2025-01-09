@@ -191,9 +191,9 @@ disp = zeros(n_np, fd);
 
 for ii = 1 : n_np
     for j=1:fd
-        index = ID(ii,fd);
+        index = ID(ii,j);
             if index > 0
-                disp(ii,fd) = dn(index);
+                disp(ii,j) = dn(index);
             else
                 % modify disp with the g data. Here it does nothing because g is zero
             end
@@ -209,7 +209,8 @@ save("disp", "disp", "n_el_x", "n_el_y");
     nL2=0;
     nH1=0;
    
-for ee = 1 : n_el
+for i=1:fd
+    for ee = 1 : n_el
     x_ele = x_coor(IEN(ee, :));
     y_ele = y_coor(IEN(ee, :));
      u_ele=disp(IEN(ee,:));
@@ -227,28 +228,36 @@ for ee = 1 : n_el
       dx_deta = dx_deta + x_ele(aa) * Na_eta;
       dy_dxi  = dy_dxi  + y_ele(aa) * Na_xi;
       dy_deta = dy_deta + y_ele(aa) * Na_eta;
-      uh = uh + u_ele(aa) * Quad(aa, xi(ll), eta(ll));
+      uh = uh + disp(IEN(ee,aa),i)* Quad(aa, xi(ll), eta(ll));
     end
+    exact(1)=u_exact(x_l,y_l);
+    exact(2)=v_exact(x_l,y_l);
+    exact_x(1)=u_x(x_l,y_l);
+    exact_x(2)=u_y(x_l,y_l);
+    exact_y(1)=v_x(x_l,y_l);
+    exact_y(2)=v_y(x_l,y_l);
     detJ = dx_dxi * dy_deta - dx_deta * dy_dxi;
     for aa = 1 : n_en
             [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
-            uh_xl = uh_xl + u_ele(aa) * (Na_xi * dy_deta - Na_eta * dy_dxi) /detJ;
-            uh_yl = uh_yl + u_ele(aa) * (Na_eta * dx_dxi - Na_xi * dx_deta) /detJ;
+            uh_xl = uh_xl + disp(IEN(ee,aa),i) * (Na_xi * dy_deta - Na_eta * dy_dxi) /detJ;
+            uh_yl = uh_yl + disp(IEN(ee,aa),i) * (Na_eta * dx_dxi - Na_xi * dx_deta) /detJ;
     end
 
-        nL2 = nL2 + weight(ll) * detJ * (uh - exact(x_l, y_l))^2;
+        nL2 = nL2 + weight(ll) * detJ * (uh - exact(i))^2;
         
-        nH1 = nH1 + weight(ll) * detJ * ( ( uh_xl - exact_x(x_l, y_l) )^2 + ( uh_yl - exact_y(x_l, y_l) )^2 );
+        nH1 = nH1 + weight(ll) * detJ * (( uh_xl - exact_x(i) )^2 + ( uh_yl - exact_y(i) )^2 );
         
+    end
     end
 end
     nH1=nH1^0.5;
     nL2=nL2^0.5;
     H1_error(:,hh/2) = nH1;
     L2_error(:,hh/2) = nL2;
-    resultH1(:,hh/2)=log(H1_error(:,hh/20));
-    resultL2(:,hh/2)=log(L2_error(:,hh/20));
+    resultH1(:,hh/2)=log(H1_error(:,hh/2));
+    resultL2(:,hh/2)=log(L2_error(:,hh/2));
     resulth(:,hh/2)=log(1/hh);
+
 
 end
 
