@@ -9,19 +9,17 @@ D(2,1)=E*nu/(1-nu^2);D(2,2)=E/(1-nu^2);D(2,3)=0;
 D(3,1)=0;D(3,2)=0;D(3,3)=E/(2*(1+nu));%建立D矩阵
 
 % 制造一个精确解，并写出来它的一阶导和二阶导
-u_exact = @(x, y) x*(1 - x)*(y^2 - y);  % u(x, y)
-v_exact = @(x, y) (x^2 - x)*y*(1 - y);  % v(x, y)
-u_x = @(x, y) (1 - 2*x)*(y^2 - y);
-u_y = @(x, y) x*(1 - x)*(2*y - 1);
-v_x = @(x, y) (2*x - 1)*y*(1 - y);
-v_y = @(x, y) (x^2 - x)*(1 - 2*y);
-u_xx = @(x, y) -2*(y^2 - y);
-u_yy = @(x, y) -2*x* (1 - x);
-v_xx = @(x, y) 2*y*(1 - y);
-v_yy = @(x, y) -2*(x - 0.5)*(1 - y);
+%用户想要计算别的算例，可以在此处修改对应的方程和精确解
+u_exact = @(x, y) x*(1 - x)*(y-y^2);  % u(x, y)
+v_exact = @(x, y) (x-x^2)*y*(1 - y);  % v(x, y)
+u_x = @(x, y) (1 - 2 * x)*(y-y^2);
+u_y = @(x, y) x*(1 - x)*(1-2*y);
+v_x = @(x, y) (1-2*x)*y*(1 - y);
+v_y = @(x, y) (x-x^2)*(1 - 2*y);
+%原来之前f求错了……
+f_x = @(x,y)((2*y*(y - 1))*E/(nu^2 - 1) - (E*(nu - 1)/2*((x - 1)*(y - 1) + x*(2*y-1) + 2*x*(x - 1)  + y*(x - 1)))/(nu^2 - 1) + (E*nu*((x - 1)*(y - 1) + x*(2*y - 1) + y*(x - 1)))/(nu^2 - 1));
+f_y= @(x,y) ((2*x*(x - 1))*E/(nu^2 - 1) - (E*(nu - 1)/2*((x - 1)*(y - 1) + x*(2*y - 1) + y*(x - 1) + 2*y*(y - 1)))/(nu^2 - 1) + (E*nu*((x - 1)*(y - 1) + x*(2*y - 1) + y*(x - 1)))/(nu^2 - 1));
 
-f_x = @(x, y) - (nu*E/((1+nu)*(1-2*nu)) * u_xx(x, y) + (2 * nu + nu*E/((1+nu)*(1-2*nu)) ) * u_yy(x, y));
-f_y = @(x, y) - (nu*E/((1+nu)*(1-2*nu))* v_xx(x, y) + (2 * nu + nu*E/((1+nu)*(1-2*nu)) ) * v_yy(x, y));
 
 % quadrature rule
 n_int_xi  = 3;
@@ -36,7 +34,7 @@ resulth = zeros(1,8);
 L2_error=zeros(1,8);
 H1_error=zeros(1,8);
 
-for hh = 2:2:16%使用HW4中的尺寸
+for hh= 2:2:16%使用HW4中的尺寸
 
 % mesh generation
 n_en   = 4;               % number of nodes in an element
@@ -53,6 +51,7 @@ y_coor = x_coor;
 
 hx = 1.0 / n_el_x;        % mesh size in x-dir
 hy = 1.0 / n_el_y;        % mesh size in y-dir
+
 
 % generate the nodal coordinates
 for ny = 1 : n_np_y
@@ -90,7 +89,7 @@ end
 
 n_eq = counter;
 
-LM = ID(IEN);
+%LM = ID(IEN);
 
 % allocate the stiffness matrix and load vector
 K = zeros(n_eq, n_eq);
@@ -128,8 +127,9 @@ for ee = 1 : n_el
       Na_x = (Na_xi * dy_deta - Na_eta * dy_dxi) / detJ;
       Na_y = (-Na_xi * dx_deta + Na_eta * dx_dxi) / detJ;
       B1 = [Na_x , 0;
-             0    , Na_y;
+            0    , Na_y;
              Na_y , Na_x];%写出来B1
+  
       for i = 1:fd
       
                 f_ele(fd* (aa - 1) + i) = f_ele(fd* (aa - 1) + i) + weight(ll) * detJ * f(i)* Na;
@@ -141,6 +141,7 @@ for ee = 1 : n_el
         B2 = [Nb_x , 0;
              0    , Nb_y;
              Nb_y , Nb_x];%写出来B2
+        
         for j=1:fd
             switch i
                     case 1
@@ -150,11 +151,13 @@ for ee = 1 : n_el
             end
             switch j
                     case 1
-                    ej = [1, 0];
+                    ej = [1;
+                          0];
                     case 2
-                     ej = [0, 1];
+                     ej = [0;
+                           1];
              end
-             k_ele(fd* (aa - 1) + i, fd* (bb - 1) + j) = k_ele(fd* (aa - 1) + i,fd * (bb - 1) + j) + weight(ll) * detJ * ei* B1' * D * B2 *ej';
+             k_ele(fd* (aa - 1) + i, fd* (bb - 1) + j) = k_ele(fd* (aa - 1) + i,fd * (bb - 1) + j) + weight(ll) * detJ * ei* B1' * D * B2 *ej;
         end 
       end
        end % end of bb loop
@@ -206,14 +209,13 @@ save("disp", "disp", "n_el_x", "n_el_y");
 
 
 %计算error
-    nL2=0;
-    nH1=0;
+    nL2=zeros(1,fd);
+    nH1=zeros(1,fd);
    
-for i=1:fd
-    for ee = 1 : n_el
-    x_ele = x_coor(IEN(ee, :));
-    y_ele = y_coor(IEN(ee, :));
-     u_ele=disp(IEN(ee,:));
+for ee = 1 : n_el
+   for i=1:fd
+    x_ele = x_coor(IEN(ee, 1:n_en));
+    y_ele = y_coor(IEN(ee, 1:n_en));
 
     for ll = 1 : n_int
     x_l = 0.0; y_l = 0.0;
@@ -233,9 +235,9 @@ for i=1:fd
     exact(1)=u_exact(x_l,y_l);
     exact(2)=v_exact(x_l,y_l);
     exact_x(1)=u_x(x_l,y_l);
-    exact_x(2)=u_y(x_l,y_l);
-    exact_y(1)=v_x(x_l,y_l);
-    exact_y(2)=v_y(x_l,y_l);
+    exact_x(2)=v_x(x_l,y_l);
+    exact_y(1)=u_y(x_l,y_l);
+    exact_y(2)=v_y(x_l,y_l);%终于找到了！这里不小心写串了啊啊
     detJ = dx_dxi * dy_deta - dx_deta * dy_dxi;
     for aa = 1 : n_en
             [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
@@ -243,20 +245,23 @@ for i=1:fd
             uh_yl = uh_yl + disp(IEN(ee,aa),i) * (Na_eta * dx_dxi - Na_xi * dx_deta) /detJ;
     end
 
-        nL2 = nL2 + weight(ll) * detJ * (uh - exact(i))^2;
+        nL2(:,i)= nL2(:,i) + weight(ll) * detJ * (uh - exact(:,i))^2;
         
-        nH1 = nH1 + weight(ll) * detJ * (( uh_xl - exact_x(i) )^2 + ( uh_yl - exact_y(i) )^2 );
+        nH1(:,i) = nH1(:,i) + weight(ll) * detJ * (( uh_xl - exact_x(:,i) )^2 + ( uh_yl - exact_y(:,i) )^2 );
         
     end
-    end
+   end
+        L2=nL2(:,1)+nL2(:,2);
+        H1=nH1(:,1)+nH1(:,2);
+
 end
-    nH1=nH1^0.5;
-    nL2=nL2^0.5;
-    H1_error(:,hh/2) = nH1;
-    L2_error(:,hh/2) = nL2;
+    H1=H1^0.5;
+    L2=L2^0.5;
+    H1_error(:,hh/2) = H1;
+    L2_error(:,hh/2) = L2;
     resultH1(:,hh/2)=log(H1_error(:,hh/2));
     resultL2(:,hh/2)=log(L2_error(:,hh/2));
-    resulth(:,hh/2)=log(1/hh);
+    resulth(:,hh/2)=log(hx);
 
 
 end
