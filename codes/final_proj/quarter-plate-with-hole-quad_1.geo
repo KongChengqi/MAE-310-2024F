@@ -1,9 +1,9 @@
 Geometry.AutoCoherence = 0;
 
-R = 0.3;
-L = 1.0;
+R = 0.5;
+L = 4.0;
 
-Small = 0.3;
+Small = 1.0;
 
 Point(1) = {L, -L, 0,Small};
 Point(2) = {L, L, 0,Small};
