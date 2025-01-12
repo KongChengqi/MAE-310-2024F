@@ -1,7 +1,7 @@
 Geometry.AutoCoherence = 0;
 
 R = 0.5;
-L = 4.0;
+L = 2.0;
 
 Small = 1.0;
 
